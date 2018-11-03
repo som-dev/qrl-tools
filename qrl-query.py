@@ -37,7 +37,7 @@ else:
 # There is something sensible to query so connect and make the request
 if queryString is not None:
     address = '{}:{}'.format(args.host, args.port)
-    channel = grpc.insecure_channel(address)
+    channel = grpc.insecure_channel(address, options=[('grpc.max_receive_message_length', 4194304*2)])
     qrlClient = qrl_pb2_grpc.PublicAPIStub(channel)
     logging.info('Connected to {}'.format(address))
     request = qrl_pb2.GetObjectReq(query=queryString)

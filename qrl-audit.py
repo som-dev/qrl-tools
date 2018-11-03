@@ -48,7 +48,7 @@ def ValidateArgs(args):
     return validArgs
 
 def ConnectClient(address):
-    channel = grpc.insecure_channel(address)
+    channel = grpc.insecure_channel(address, options=[('grpc.max_receive_message_length', 4194304*2)])
     return qrl_pb2_grpc.PublicAPIStub(channel)
 
 def AuditAddress(qrlClient, addr, printSummary=True):
@@ -178,11 +178,15 @@ def AuditChain(qrlClient):
             logging.error('merkle_root error at {}'.format(blockNum))
 
     for addr in balanceByAddressStore:
-        balance = AuditAddress(qrlClient, 'Q'+addr, False)
-        if balance != balanceByAddressStore[addr]:
-            logging.error('balance for {} does not match'.format('Q'+addr))
-            logging.error('node-reported balance: {}'.format(balance))
-            logging.error('calculated balance:    {}'.format(balanceByAddressStore[addr]))
+        try:
+            balance = AuditAddress(qrlClient, 'Q'+addr, False)
+            if balance != balanceByAddressStore[addr]:
+                logging.error('balance for {} does not match'.format('Q'+addr))
+                logging.error('node-reported balance: {}'.format(balance))
+                logging.error('calculated balance:    {}'.format(balanceByAddressStore[addr]))
+        except:
+            logging.error('could not query addr {}'.format('Q'+addr))
+            raise
 
 # main
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
